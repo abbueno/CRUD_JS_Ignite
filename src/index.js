@@ -17,7 +17,7 @@ function checksExistsUserAccount(request, response, next) {
   const user = users.find(user => user.username === username);
 
   if(!user){
-      return response.status(404).json({error: "User not found"})
+      return response.status(404).json({error: "User not found"});
   }
 
   request.user = user;
@@ -52,7 +52,7 @@ app.post('/users', (request, response) => {
     id: uuidv4(),
     name, 
     username,
-    todos: []
+    todos: [],
   } 
 
   users.push(user);
@@ -84,38 +84,50 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  const { todo } = request;
+  const { user } = request;
   const { title, deadline } = request.body;
+  const { id } = request.params;
+
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: "Todos is not exists" });
+  }
 
   todo.title = title;
   todo.deadline = deadline;
 
-
-  return response.json(todo);
+  return response.status(200).json(todo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  const { todo } = request;
+  const { user } = request;
+  const { id } = request.params;
+
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: "Todo not exists" });
+  }
 
   todo.done = true;
 
-  return response.json(todo);
+  return response.status(200).json(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   const { user } = request;
   const { id } = request.params;
-  
-  const index_todo = user.todos.findIndex((todo) => todo.id === id);
 
-  if (index_todo === -1){
-    return response.status(404).json({error: "Todo not found"});
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: "Todos is not exists" });
   }
 
-  user.todos.splice(index_todo, 1);
- 
+  user.todos.splice(todo, 1);
 
-  return response.status(204).send();
+  return response.status(204).json({ error: "Todo deleted" });
 });
 
 module.exports = app;
